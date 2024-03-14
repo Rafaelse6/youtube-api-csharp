@@ -1,4 +1,5 @@
-﻿using Google.Apis.Services;
+﻿using DotNet8YoutubeApi.Models;
+using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +25,17 @@ namespace DotNet8YoutubeApi.Controllers
 
             var searchResponse = await searchRequest.ExecuteAsync();
 
-            return Ok(searchResponse);
+            var videoList = searchResponse.Items.Select(item => new VideoDetails
+            {
+                Title = item.Snippet.Title,
+                Link = $"https://www.youtube.com/watch?v={item.Id.VideoId}",
+                Thumbnail = item.Snippet.Thumbnails.Medium.Url,
+                PublishedAt = item.Snippet.PublishedAtDateTimeOffset
+            })
+                .OrderBy(video => video.PublishedAt)
+                .ToList();
+
+            return Ok(videoList);
         }
     }
 }
