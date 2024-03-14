@@ -11,7 +11,7 @@ namespace DotNet8YoutubeApi.Controllers
     public class YouTubeController : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> GetChannelVideos()
+        public async Task<IActionResult> GetChannelVideos(string? pageToken = null, int maxResults = 50)
         {
             var youtubeService = new YouTubeService(new BaseClientService.Initializer
             {
@@ -22,6 +22,8 @@ namespace DotNet8YoutubeApi.Controllers
             var searchRequest = youtubeService.Search.List("snippet");
             searchRequest.ChannelId = "UCq8LldVrjqe61KQttZlLW8g";
             searchRequest.Order = SearchResource.ListRequest.OrderEnum.Date;
+            searchRequest.MaxResults = maxResults;
+            searchRequest.PageToken = pageToken;
 
             var searchResponse = await searchRequest.ExecuteAsync();
 
@@ -35,7 +37,14 @@ namespace DotNet8YoutubeApi.Controllers
                 .OrderBy(video => video.PublishedAt)
                 .ToList();
 
-            return Ok(videoList);
+            var response = new YouTubeResponse
+            {
+                Videos = videoList,
+                NextPageToken = searchResponse.NextPageToken,
+                PrevPageToken = searchResponse.PrevPageToken,
+            };
+
+            return Ok(response);
         }
     }
 }
